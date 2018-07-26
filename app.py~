@@ -1,0 +1,50 @@
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import recruitment_analysis as recruit
+import pandas as pd
+
+app = dash.Dash()
+
+#reading in data
+applicants = pd.read_csv('~/dev/play-dash/applicants.csv')
+
+#by bootcamp, online, or school                                                                                                                                  
+general = applicants.groupby(['is_bootcamp', 'round']).size().to_frame('counts').reset_index()
+
+#by individual school
+school_ppl = applicants.loc[applicants.is_bootcamp == 'School']
+school_ppl = school_ppl.groupby(['source', 'round']).size().to_frame('counts').reset_index()
+
+#by individual bootcamp
+bootcamp_ppl = applicants.loc[applicants.is_bootcamp == 'Bootcamp']
+bootcamp_ppl = bootcamp_ppl.groupby(['source', 'round']).size().to_frame('counts').reset_index()
+
+
+app.layout = html.Div(children=[
+    html.H1(children='Recruitment Analysis'),
+
+
+    html.Div(children = '''
+      Visualizations of CKM Recruitment Data 
+    '''),
+
+
+    dcc.Graph(
+        id= 'general-graph',
+        figure= {
+            'data': [
+                recruit.create_traces(general, 'is_bootcamp')
+            ],
+            'layout': {
+                'title': 'Source Success by Round',
+                'barmode': 'stack',
+                'yaxis': {'title' :'Source'},
+                'xaxis': {'title' : 'Percentage by Round', 'tickformat': '%'}
+            }
+        }
+    )
+])
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
